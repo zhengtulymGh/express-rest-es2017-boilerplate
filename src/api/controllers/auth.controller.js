@@ -1,5 +1,6 @@
 const httpStatus = require('http-status');
 const User = require('../models/user.model');
+const { Score } = require('../models/score.model');
 const RefreshToken = require('../models/refreshToken.model');
 const moment = require('moment-timezone');
 const { jwtExpirationInterval } = require('../../config/vars');
@@ -23,13 +24,18 @@ function generateTokenResponse(user, accessToken) {
  */
 exports.register = async (req, res, next) => {
   try {
-    const user = await (new User(req.body)).save();
-    const userTransformed = user.transform();
-    const token = generateTokenResponse(user, user.token());
+    const user = new User(req.body);
+    user.score.push({ sourceKey: 'register' });
+    const userSave = await user.save();
+    const userTransformed = userSave.transform();
+    const token = generateTokenResponse(userSave, userSave.token());
+
+
     res.status(httpStatus.CREATED);
     return res.json({ token, user: userTransformed });
   } catch (error) {
-    return next(User.checkDuplicateEmail(error));
+    // console.log(error)
+    return next(User.checkDuplicatePhone(error));
   }
 };
 
@@ -71,12 +77,12 @@ exports.oAuth = async (req, res, next) => {
  */
 exports.refresh = async (req, res, next) => {
   try {
-    const { email, refreshToken } = req.body;
+    const { phone, refreshToken } = req.body;
     const refreshObject = await RefreshToken.findOneAndRemove({
-      userEmail: email,
+      userPhone: phone,
       token: refreshToken,
     });
-    const { user, accessToken } = await User.findAndGenerateToken({ email, refreshObject });
+    const { user, accessToken } = await User.findAndGenerateToken({ phone, refreshObject });
     const response = generateTokenResponse(user, accessToken);
     return res.json(response);
   } catch (error) {

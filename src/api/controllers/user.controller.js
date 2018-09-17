@@ -1,6 +1,7 @@
 const httpStatus = require('http-status');
 const { omit } = require('lodash');
 const User = require('../models/user.model');
+const { Score } = require('../models/score.model');
 const { handler: errorHandler } = require('../middlewares/error');
 
 /**
@@ -40,7 +41,7 @@ exports.create = async (req, res, next) => {
     res.status(httpStatus.CREATED);
     res.json(savedUser.transform());
   } catch (error) {
-    next(User.checkDuplicateEmail(error));
+    next(User.checkDuplicatePhone(error));
   }
 };
 
@@ -60,7 +61,7 @@ exports.replace = async (req, res, next) => {
 
     res.json(savedUser.transform());
   } catch (error) {
-    next(User.checkDuplicateEmail(error));
+    next(User.checkDuplicatePhone(error));
   }
 };
 
@@ -75,7 +76,7 @@ exports.update = (req, res, next) => {
 
   user.save()
     .then(savedUser => res.json(savedUser.transform()))
-    .catch(e => next(User.checkDuplicateEmail(e)));
+    .catch(e => next(User.checkDuplicatePhone(e)));
 };
 
 /**
@@ -102,4 +103,34 @@ exports.remove = (req, res, next) => {
   user.remove()
     .then(() => res.status(httpStatus.NO_CONTENT).end())
     .catch(e => next(e));
+};
+
+
+/**
+ * Get user score
+ * @public
+ */
+exports.getScoreRecords = (req, res) => res.json(req.locals.user.getScoreRecords());
+
+/**
+ * Create new score
+ * @public
+ */
+exports.createScore = (req, res, next) => {
+  try {
+    const { user } = req.locals;
+    const sourceKey = req.body.sourceKey
+    // console.log('sourceKey', sourceKey)
+    if (user.score.filter(item => {
+      return item.sourceKey === sourceKey
+    }).length) {
+      next(Score.duplicateSourceKey())
+    }
+    user.score = user.score.concat([{ sourceKey }])
+    user.save()
+      .then(() => res.json(user.getScoreRecords()))
+      .catch(e => next(e));
+  } catch (error) {
+    next(error)
+  }
 };

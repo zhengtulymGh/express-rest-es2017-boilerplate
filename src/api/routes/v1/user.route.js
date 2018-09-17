@@ -189,5 +189,26 @@ router
    */
   .delete(authorize(LOGGED_USER), controller.remove);
 
+router
+  .route('/score/:userId')
+  /**
+   * @api {get} v1/users/score Get User Score
+   * @apiDescription Get user score information
+   * @apiVersion 1.0.0
+   * @apiName GetUserScore
+   * @apiGroup User
+   * @apiPermission user
+   *
+   * @apiHeader {String} Athorization  User's access token
+   *
+   * @apiSuccess {Array} score Users's score record
+   *
+   * @apiError (Unauthorized 401) Unauthorized Only authenticated users can access the data
+   * @apiError (Forbidden 403)    Forbidden    Only user with same id or admins can access the data
+   * @apiError (Not Found 404)    NotFound     User does not exist
+   */
+  .get(authorize(LOGGED_USER), controller.getScoreRecords)
+  .post(authorize(LOGGED_USER), controller.createScore)
+
 
 module.exports = router;

@@ -7,7 +7,7 @@ const jwt = require('jwt-simple');
 const uuidv4 = require('uuid/v4');
 const APIError = require('../utils/APIError');
 const { env, jwtSecret, jwtExpirationInterval } = require('../../config/vars');
-
+const { scoreSchema } = require('./score.model');
 /**
 * User Roles
 */
@@ -18,17 +18,49 @@ const roles = ['user', 'admin'];
  * @private
  */
 const userSchema = new mongoose.Schema({
+  phone: {
+    type: Number,
+    match: [/^[1-9][0-9]{10}$/, 'The value of path {PATH} ({VALUE}) is not a valid mobile number.'],
+    required: true,
+    unique: true,
+  },
+  picture: {
+    type: String,
+    trim: true,
+  },
+  userName: {
+    type: String,
+    maxlength: 128,
+    index: true,
+    trim: true,
+  },
+  gender: {
+    type: String,
+    index: true,
+    trim: true,
+  },
+  birthday: {
+    type: String,
+    index: true,
+    trim: true,
+  },
+  deliveryAddress: {
+
+  },
+  profession: {
+    type: String,
+    index: true,
+  },
+  score: [scoreSchema],
   email: {
     type: String,
     match: /^\S+@\S+\.\S+$/,
-    required: true,
-    unique: true,
+    // unique: true,
     trim: true,
     lowercase: true,
   },
   password: {
     type: String,
-    required: true,
     minlength: 6,
     maxlength: 128,
   },
@@ -47,10 +79,6 @@ const userSchema = new mongoose.Schema({
     enum: roles,
     default: 'user',
   },
-  picture: {
-    type: String,
-    trim: true,
-  },
 }, {
   timestamps: true,
 });
@@ -63,6 +91,7 @@ const userSchema = new mongoose.Schema({
  */
 userSchema.pre('save', async function save(next) {
   try {
+    console.log('userSchema.pre', this)
     if (!this.isModified('password')) return next();
 
     const rounds = env === 'test' ? 1 : 10;
@@ -77,12 +106,23 @@ userSchema.pre('save', async function save(next) {
 });
 
 /**
- * Methods
+ * Methods -\
  */
 userSchema.method({
   transform() {
     const transformed = {};
-    const fields = ['id', 'name', 'email', 'picture', 'role', 'createdAt'];
+    const fields = ['id', 'userName', 'phone', 'picture', 'createdAt'];
+
+    fields.forEach((field) => {
+      transformed[field] = this[field];
+    });
+
+    return transformed;
+  },
+
+  getScoreRecords() {
+    const transformed = {};
+    const fields = ['score'];
 
     fields.forEach((field) => {
       transformed[field] = this[field];
@@ -139,16 +179,16 @@ userSchema.statics = {
   },
 
   /**
-   * Find user by email and tries to generate a JWT token
+   * Find user by phone and tries to generate a JWT token
    *
    * @param {ObjectId} id - The objectId of user.
    * @returns {Promise<User, APIError>}
    */
   async findAndGenerateToken(options) {
-    const { email, password, refreshObject } = options;
-    if (!email) throw new APIError({ message: 'An email is required to generate a token' });
+    const { phone, password, refreshObject } = options;
+    if (!phone) throw new APIError({ message: 'An phone is required to generate a token' });
 
-    const user = await this.findOne({ email }).exec();
+    const user = await this.findOne({ phone }).exec();
     const err = {
       status: httpStatus.UNAUTHORIZED,
       isPublic: true,
@@ -157,15 +197,15 @@ userSchema.statics = {
       if (user && await user.passwordMatches(password)) {
         return { user, accessToken: user.token() };
       }
-      err.message = 'Incorrect email or password';
-    } else if (refreshObject && refreshObject.userEmail === email) {
+      err.message = 'Incorrect phone or password';
+    } else if (refreshObject && refreshObject.userPhone === phone) {
       if (moment(refreshObject.expires).isBefore()) {
         err.message = 'Invalid refresh token.';
       } else {
         return { user, accessToken: user.token() };
       }
     } else {
-      err.message = 'Incorrect email or refreshToken';
+      err.message = 'Incorrect phone or refreshToken';
     }
     throw new APIError(err);
   },
@@ -178,9 +218,9 @@ userSchema.statics = {
    * @returns {Promise<User[]>}
    */
   list({
-    page = 1, perPage = 30, name, email, role,
+    page = 1, perPage = 30, userName, phone,
   }) {
-    const options = omitBy({ name, email, role }, isNil);
+    const options = omitBy({ userName, phone }, isNil);
 
     return this.find(options)
       .sort({ createdAt: -1 })
@@ -196,14 +236,14 @@ userSchema.statics = {
    * @param {Error} error
    * @returns {Error|APIError}
    */
-  checkDuplicateEmail(error) {
+  checkDuplicatePhone(error) {
     if (error.name === 'MongoError' && error.code === 11000) {
       return new APIError({
         message: 'Validation Error',
         errors: [{
-          field: 'email',
+          field: 'phone',
           location: 'body',
-          messages: ['"email" already exists'],
+          messages: ['"phone" already exists'],
         }],
         status: httpStatus.CONFLICT,
         isPublic: true,
@@ -214,9 +254,9 @@ userSchema.statics = {
   },
 
   async oAuthLogin({
-    service, id, email, name, picture,
+    service, id, phone, userName, picture,
   }) {
-    const user = await this.findOne({ $or: [{ [`services.${service}`]: id }, { email }] });
+    const user = await this.findOne({ $or: [{ [`services.${service}`]: id }, { phone }] });
     if (user) {
       user.services[service] = id;
       if (!user.name) user.name = name;
@@ -225,7 +265,7 @@ userSchema.statics = {
     }
     const password = uuidv4();
     return this.create({
-      services: { [service]: id }, email, password, name, picture,
+      services: { [service]: id }, phone, password, name, picture,
     });
   },
 };
