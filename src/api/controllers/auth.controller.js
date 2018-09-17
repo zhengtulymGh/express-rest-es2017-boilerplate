@@ -5,6 +5,8 @@ const RefreshToken = require('../models/refreshToken.model');
 const moment = require('moment-timezone');
 const { jwtExpirationInterval } = require('../../config/vars');
 
+const svgCaptcha = require('svg-captcha');
+
 /**
 * Returns a formated object with tokens
 * @private
@@ -29,7 +31,6 @@ exports.register = async (req, res, next) => {
     const userSave = await user.save();
     const userTransformed = userSave.transform();
     const token = generateTokenResponse(userSave, userSave.token());
-
 
     res.status(httpStatus.CREATED);
     return res.json({ token, user: userTransformed });
@@ -85,6 +86,22 @@ exports.refresh = async (req, res, next) => {
     const { user, accessToken } = await User.findAndGenerateToken({ phone, refreshObject });
     const response = generateTokenResponse(user, accessToken);
     return res.json(response);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+/**
+ * Returns a svg captcha
+ * @public
+ */
+exports.createCaptcha = (req, res, next) => {
+  try {
+    const captcha = svgCaptcha.create();
+    req.session.captcha = captcha.text;
+    
+    res.type('svg');
+    res.status(200).send(captcha.data);
   } catch (error) {
     return next(error);
   }

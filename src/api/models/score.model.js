@@ -13,14 +13,28 @@ const APIError = require('../utils/APIError');
 */
 const source = {
   register: {
-    key: 'register',
     name: '注册',
     score: 500
   },
   share: {
-    key: 'share',
     name: '分享',
     score: 1000
+  },
+  gender: {
+    name: '设置性别',
+    score: 100
+  },
+  birthday: {
+    name: '设置生日',
+    score: 100
+  },
+  profession: {
+    name: '设置工作信息',
+    score: 100
+  },
+  deliveryAddress: {
+    name: '设置收货地址',
+    score: 100
   },
 };
 

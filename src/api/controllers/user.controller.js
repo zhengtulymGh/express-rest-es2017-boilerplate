@@ -125,8 +125,27 @@ exports.createScore = (req, res, next) => {
       return item.sourceKey === sourceKey
     }).length) {
       next(Score.duplicateSourceKey())
+      return
     }
     user.score = user.score.concat([{ sourceKey }])
+    user.save()
+      .then(() => res.json(user.getScoreRecords()))
+      .catch(e => next(e));
+  } catch (error) {
+    next(error)
+  }
+};
+
+exports.setGender = (req, res, next) => {
+  try {
+    const { user } = req.locals;
+    const sourceKey = 'gender';
+    if (!user.score.filter(item => {
+      return item.sourceKey === sourceKey
+    }).length) {
+      user.score = user.score.concat([{ sourceKey }])
+    }
+    user.gender = req.body.gender;
     user.save()
       .then(() => res.json(user.getScoreRecords()))
       .catch(e => next(e));

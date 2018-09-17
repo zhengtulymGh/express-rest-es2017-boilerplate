@@ -11,6 +11,8 @@ const { logs } = require('./vars');
 const strategies = require('./passport');
 const error = require('../api/middlewares/error');
 
+var cookieParser = require('cookie-parser');
+
 /**
 * Express instance
 * @public
@@ -23,6 +25,16 @@ app.use(morgan(logs));
 // parse body params and attache them to req.body
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(cookieParser());
+
+//TODO 现在只是开发使用，上线不能这样用，因为默认是内存存储，文档说有内存泄漏的风险
+var session = require('express-session');
+app.use(session({
+  secret: 'session secret',
+  resave: false,
+  saveUninitialized: true
+}));
 
 // gzip compression
 app.use(compress());

@@ -143,5 +143,22 @@ router.route('/facebook')
 router.route('/google')
   .post(validate(oAuth), oAuthLogin('google'), controller.oAuth);
 
+router
+  .route('/svgcaptcha')
+  /**
+   * @api {get} v1/auth/svgcaptcha Get svgcaptcha
+   * @apiDescription Get svgcaptcha
+   * @apiVersion 1.0.0
+   * @apiName GetSvgcaptcha
+   * @apiGroup Auth
+   * @apiPermission public
+   *
+   * @apiSuccess {String} captcha svg.
+   *
+   * @apiError (Unauthorized 401)  Unauthorized  Only authenticated users can access the data
+   * @apiError (Forbidden 403)     Forbidden     Only admins can access the data
+   */
+  .get(controller.createCaptcha)
+
 
 module.exports = router;

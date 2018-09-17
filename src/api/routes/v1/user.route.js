@@ -190,7 +190,7 @@ router
   .delete(authorize(LOGGED_USER), controller.remove);
 
 router
-  .route('/score/:userId')
+  .route('/:userId/score')
   /**
    * @api {get} v1/users/score Get User Score
    * @apiDescription Get user score information
@@ -209,6 +209,10 @@ router
    */
   .get(authorize(LOGGED_USER), controller.getScoreRecords)
   .post(authorize(LOGGED_USER), controller.createScore)
+
+router
+  .route('/:userId/gender')
+  .post(authorize(LOGGED_USER), controller.setGender)
 
 
 module.exports = router;
