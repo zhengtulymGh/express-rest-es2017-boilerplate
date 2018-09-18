@@ -70,11 +70,9 @@ const scoreSchema = new mongoose.Schema({
  */
 scoreSchema.pre('save', async function save(next) {
   try {
-    console.log('scoreSchema pre save', this)
-    console.log('sourceKey', this.sourceKey)
-    console.log(`source[${this.sourceKey}]`, source[this.sourceKey])
-    this.value = this.value || source[this.sourceKey].score
-    this.sourceName = this.sourceName || source[this.sourceKey].name
+    const item = source[this.sourceKey]
+    this.value = this.value || (item && item.score)
+    this.sourceName = this.sourceName || (item && item.name)
     return next();
   } catch (error) {
     return next(error);
@@ -175,5 +173,6 @@ scoreSchema.statics = {
  */
 module.exports = {
   'scoreSchema': scoreSchema,
-  'Score': mongoose.model('Score', scoreSchema)
+  'Score': mongoose.model('Score', scoreSchema),
+  scoreSource: source
 }

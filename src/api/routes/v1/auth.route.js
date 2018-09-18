@@ -9,6 +9,9 @@ const {
   refresh,
 } = require('../../validations/auth.validation');
 
+const svgVerify = require('../utils/svgVerify')
+
+
 const router = express.Router();
 
 /**

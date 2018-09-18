@@ -24,11 +24,11 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  picture: {
+  avatar: {
     type: String,
     trim: true,
   },
-  userName: {
+  nickName: {
     type: String,
     maxlength: 128,
     index: true,
@@ -45,9 +45,7 @@ const userSchema = new mongoose.Schema({
     index: true,
     trim: true,
   },
-  deliveryAddress: {
-
-  },
+  deliveryAddress: [],
   profession: {
     type: String,
     index: true,
@@ -112,7 +110,7 @@ userSchema.pre('save', async function save(next) {
 userSchema.method({
   transform() {
     const transformed = {};
-    const fields = ['id', 'userName', 'phone', 'picture', 'createdAt'];
+    const fields = ['id', 'name', 'nickName', 'phone', 'avatar', 'gender', 'birthday', 'profession', 'deliveryAddress', 'createdAt'];
 
     fields.forEach((field) => {
       transformed[field] = this[field];
@@ -186,7 +184,7 @@ userSchema.statics = {
    * @returns {Promise<User, APIError>}
    */
   async findAndGenerateToken(options) {
-    const { phone, password, refreshObject } = options;
+    const { phone, capacha, refreshObject } = options;
     if (!phone) throw new APIError({ message: 'An phone is required to generate a token' });
 
     const user = await this.findOne({ phone }).exec();
@@ -219,9 +217,9 @@ userSchema.statics = {
    * @returns {Promise<User[]>}
    */
   list({
-    page = 1, perPage = 30, userName, phone,
+    page = 1, perPage = 30, nickName, phone,
   }) {
-    const options = omitBy({ userName, phone }, isNil);
+    const options = omitBy({ nickName, phone }, isNil);
 
     return this.find(options)
       .sort({ createdAt: -1 })
@@ -255,13 +253,13 @@ userSchema.statics = {
   },
 
   async oAuthLogin({
-    service, id, phone, userName, picture,
+    service, id, phone, nickName, avatar,
   }) {
     const user = await this.findOne({ $or: [{ [`services.${service}`]: id }, { phone }] });
     if (user) {
       user.services[service] = id;
       if (!user.name) user.name = name;
-      if (!user.picture) user.picture = picture;
+      if (!user.avatar) user.avatar = avatar;
       return user.save();
     }
     const password = uuidv4();

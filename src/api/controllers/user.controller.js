@@ -1,7 +1,7 @@
 const httpStatus = require('http-status');
 const { omit } = require('lodash');
 const User = require('../models/user.model');
-const { Score } = require('../models/score.model');
+const { Score, scoreSource } = require('../models/score.model');
 const { handler: errorHandler } = require('../middlewares/error');
 
 /**
@@ -73,7 +73,13 @@ exports.update = (req, res, next) => {
   const ommitRole = req.locals.user.role !== 'admin' ? 'role' : '';
   const updatedUser = omit(req.body, ommitRole);
   const user = Object.assign(req.locals.user, updatedUser);
-
+  for (let key in updatedUser) {
+    if (Object.hasOwnProperty.call(scoreSource, key) && !user.score.filter(item => {
+      return item.sourceKey === key
+    }).length) {
+      user.score = user.score.concat([{ sourceKey: key }])
+    }
+  }
   user.save()
     .then(savedUser => res.json(savedUser.transform()))
     .catch(e => next(User.checkDuplicatePhone(e)));
