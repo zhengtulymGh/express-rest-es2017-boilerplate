@@ -9,8 +9,6 @@ const {
   refresh,
 } = require('../../validations/auth.validation');
 
-const svgVerify = require('../utils/svgVerify')
-
 
 const router = express.Router();
 
@@ -22,8 +20,8 @@ const router = express.Router();
  * @apiGroup Auth
  * @apiPermission public
  *
- * @apiParam  {String}          email     User's email
- * @apiParam  {String{6..128}}  password  User's password
+ * @apiParam  {String}  phone    User's phone
+ * @apiParam  {String}  captcha  User's captcha
  *
  * @apiSuccess (Created 201) {String}  token.tokenType     Access Token's type
  * @apiSuccess (Created 201) {String}  token.accessToken   Authorization Token
@@ -53,8 +51,8 @@ router.route('/register')
  * @apiGroup Auth
  * @apiPermission public
  *
- * @apiParam  {String}         email     User's email
- * @apiParam  {String{..128}}  password  User's password
+ * @apiParam  {String}  phone    User's phone
+ * @apiParam  {String}  captcha  User's captcha
  *
  * @apiSuccess  {String}  token.tokenType     Access Token's type
  * @apiSuccess  {String}  token.accessToken   Authorization Token
@@ -65,7 +63,6 @@ router.route('/register')
  *
  * @apiSuccess  {String}  user.id             User's id
  * @apiSuccess  {String}  user.name           User's name
- * @apiSuccess  {String}  user.email          User's email
  * @apiSuccess  {String}  user.role           User's role
  * @apiSuccess  {Date}    user.createdAt      Timestamp
  *

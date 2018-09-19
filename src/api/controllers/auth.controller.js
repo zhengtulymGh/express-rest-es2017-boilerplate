@@ -6,6 +6,7 @@ const moment = require('moment-timezone');
 const { jwtExpirationInterval } = require('../../config/vars');
 
 const svgCaptcha = require('svg-captcha');
+const captchaVerify = require('../utils/svgVerify');
 
 /**
 * Returns a formated object with tokens
@@ -26,14 +27,18 @@ function generateTokenResponse(user, accessToken) {
  */
 exports.register = async (req, res, next) => {
   try {
-    const user = new User(req.body);
-    user.score.push({ sourceKey: 'register' });
-    const userSave = await user.save();
-    const userTransformed = userSave.transform();
-    const token = generateTokenResponse(userSave, userSave.token());
+    if (captchaVerify(req, req.body.captcha)) {
+      const user = new User(req.body);
+      user.score.push({ sourceKey: 'register' });
+      const userSave = await user.save();
+      const userTransformed = userSave.transform();
+      const token = generateTokenResponse(userSave, userSave.token());
 
-    res.status(httpStatus.CREATED);
-    return res.json({ token, user: userTransformed });
+      res.status(httpStatus.CREATED);
+      return res.json({ token, user: userTransformed });
+    } else {
+      return next(User.captchaError());
+    }
   } catch (error) {
     // console.log(error)
     return next(User.checkDuplicatePhone(error));
@@ -41,7 +46,7 @@ exports.register = async (req, res, next) => {
 };
 
 /**
- * Returns jwt token if valid username and password is provided
+ * Returns jwt token if valid phone and captcha is provided
  * @public
  */
 exports.login = async (req, res, next) => {
@@ -99,7 +104,7 @@ exports.createCaptcha = (req, res, next) => {
   try {
     const captcha = svgCaptcha.create();
     req.session.captcha = captcha.text;
-    
+
     res.type('svg');
     res.status(200).send(captcha.data);
   } catch (error) {

@@ -91,12 +91,12 @@ const userSchema = new mongoose.Schema({
 userSchema.pre('save', async function save(next) {
   try {
     console.log('userSchema.pre', this)
-    if (!this.isModified('password')) return next();
+    // if (!this.isModified('password')) return next();
 
     const rounds = env === 'test' ? 1 : 10;
 
-    const hash = await bcrypt.hash(this.password, rounds);
-    this.password = hash;
+    // const hash = await bcrypt.hash(this.password, rounds);
+    // this.password = hash;
 
     return next();
   } catch (error) {
@@ -184,7 +184,7 @@ userSchema.statics = {
    * @returns {Promise<User, APIError>}
    */
   async findAndGenerateToken(options) {
-    const { phone, capacha, refreshObject } = options;
+    const { phone, captcha, refreshObject } = options;
     if (!phone) throw new APIError({ message: 'An phone is required to generate a token' });
 
     const user = await this.findOne({ phone }).exec();
@@ -192,11 +192,17 @@ userSchema.statics = {
       status: httpStatus.UNAUTHORIZED,
       isPublic: true,
     };
-    if (password) {
-      if (user && await user.passwordMatches(password)) {
+    console.log('captcha', captcha)
+    if (captcha) {
+      // if (user && await user.passwordMatches(password)) {
+      //   return { user, accessToken: user.token() };
+      // }
+      // err.message = 'Incorrect phone or password';
+      if(user) {
         return { user, accessToken: user.token() };
+      } else {
+        err.message = '用户不存在';
       }
-      err.message = 'Incorrect phone or password';
     } else if (refreshObject && refreshObject.userPhone === phone) {
       if (moment(refreshObject.expires).isBefore()) {
         err.message = 'Invalid refresh token.';
@@ -226,6 +232,20 @@ userSchema.statics = {
       .skip(perPage * (page - 1))
       .limit(perPage)
       .exec();
+  },
+
+  captchaError(error) {
+    return new APIError({
+      message: '验证码错误',
+      errors: [{
+        field: 'captcha',
+        location: 'body',
+        messages: ['"captcha" is not correct'],
+      }],
+      status: httpStatus.CONFLICT,
+      isPublic: true,
+      stack: '',
+    });
   },
 
   /**

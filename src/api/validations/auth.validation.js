@@ -5,8 +5,9 @@ module.exports = {
   register: {
     body: {
       phone: Joi.number().required(),
+      captcha: Joi.string().required()
       // email: Joi.string().email().required(),
-      password: Joi.string().required().min(6).max(128),
+      // password: Joi.string().required().min(6).max(128),
     },
   },
 
@@ -14,8 +15,9 @@ module.exports = {
   login: {
     body: {
       phone: Joi.number().required(),
+      captcha: Joi.string().required()
       // email: Joi.string().email().required(),
-      password: Joi.string().required().max(128),
+      // password: Joi.string().required().max(128),
     },
   },
 
