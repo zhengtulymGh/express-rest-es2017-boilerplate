@@ -51,10 +51,14 @@ exports.register = async (req, res, next) => {
  */
 exports.login = async (req, res, next) => {
   try {
-    const { user, accessToken } = await User.findAndGenerateToken(req.body);
-    const token = generateTokenResponse(user, accessToken);
-    const userTransformed = user.transform();
-    return res.json({ token, user: userTransformed });
+    if (captchaVerify(req, req.body.captcha)) {
+      const { user, accessToken } = await User.findAndGenerateToken(req.body);
+      const token = generateTokenResponse(user, accessToken);
+      const userTransformed = user.transform();
+      return res.json({ token, user: userTransformed });
+    } else {
+      return next(User.captchaError());
+    }
   } catch (error) {
     return next(error);
   }

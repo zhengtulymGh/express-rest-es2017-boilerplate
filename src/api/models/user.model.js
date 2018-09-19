@@ -242,7 +242,7 @@ userSchema.statics = {
         location: 'body',
         messages: ['"captcha" is not correct'],
       }],
-      status: httpStatus.CONFLICT,
+      status: httpStatus.BAD_REQUEST,
       isPublic: true,
       stack: '',
     });
