@@ -19,7 +19,7 @@ Boilerplate/Generator/Starter Project for building RESTful APIs and microservice
  - Linting with [eslint](http://eslint.org)
  - Tests with [mocha](https://mochajs.org), [chai](http://chaijs.com) and [sinon](http://sinonjs.org)
  - Code coverage with [istanbul](https://istanbul.js.org) and [coveralls](https://coveralls.io)
- - Git hooks with [husky](https://github.com/typicode/husky) 
+ - Git hooks with [husky](https://github.com/typicode/husky)
  - Logging with [morgan](https://github.com/expressjs/morgan)
  - Authentication and Authorization with [passport](http://passportjs.org)
  - API documentation geratorion with [apidoc](http://apidocjs.com)
@@ -32,6 +32,11 @@ Boilerplate/Generator/Starter Project for building RESTful APIs and microservice
  - [Yarn](https://yarnpkg.com/en/docs/install)
 
 ## Getting Started
+
+start mongod
+```bash
+mongod --dbpath E:/\mongodata/\db
+```
 
 Clone the repo and make it yours:
 
