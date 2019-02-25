@@ -71,7 +71,7 @@ exports.replace = async (req, res, next) => {
  */
 exports.update = (req, res, next) => {
   const ommitRole = req.locals.user.role !== 'admin' ? 'role' : '';
-  const updatedUser = omit(req.body, ommitRole);
+  const updatedUser = omit(req.body, ommitRole, 'level', 'score');
   const user = Object.assign(req.locals.user, updatedUser);
   for (let key in updatedUser) {
     if (Object.hasOwnProperty.call(scoreSource, key) && !user.score.filter(item => {
@@ -142,19 +142,12 @@ exports.createScore = (req, res, next) => {
   }
 };
 
-exports.setGender = (req, res, next) => {
+exports.getOptions = (req, res, next) => {
+  console.log('User', User)
   try {
-    const { user } = req.locals;
-    const sourceKey = 'gender';
-    if (!user.score.filter(item => {
-      return item.sourceKey === sourceKey
-    }).length) {
-      user.score = user.score.concat([{ sourceKey }])
-    }
-    user.gender = req.body.gender;
-    user.save()
-      .then(() => res.json(user.getScoreRecords()))
-      .catch(e => next(e));
+    console.log('req.query', req.query)
+    console.log('User', User)
+    res.json(User[req.query.source])
   } catch (error) {
     next(error)
   }

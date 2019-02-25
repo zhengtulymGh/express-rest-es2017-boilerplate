@@ -88,10 +88,12 @@ exports.oAuth = async (req, res, next) => {
 exports.refresh = async (req, res, next) => {
   try {
     const { phone, refreshToken } = req.body;
+    console.log('RefreshToken.findOneAndRemove', RefreshToken.findOneAndRemove)
     const refreshObject = await RefreshToken.findOneAndRemove({
       userPhone: phone,
       token: refreshToken,
     });
+    console.log('refreshObject', refreshObject)
     const { user, accessToken } = await User.findAndGenerateToken({ phone, refreshObject });
     const response = generateTokenResponse(user, accessToken);
     return res.json(response);

@@ -42,8 +42,13 @@ module.exports = {
     body: {
       email: Joi.string().email(),
       // password: Joi.string().min(6).max(128),
+      profession: Joi.string(),
+      avatar: Joi.string(),
+      gender: Joi.string(),
+      birthday: Joi.string(),
       name: Joi.string().max(128),
       role: Joi.string().valid(User.roles),
+      deliveryAddress: Joi.string(),
     },
     params: {
       userId: Joi.string().regex(/^[a-fA-F0-9]{24}$/).required(),

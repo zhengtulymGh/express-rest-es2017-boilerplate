@@ -211,8 +211,8 @@ router
   .post(authorize(LOGGED_USER), controller.createScore)
 
 router
-  .route('/:userId/gender')
-  .post(authorize(LOGGED_USER), controller.setGender)
+  .route('/options')
+  .get(controller.getOptions)
 
 
 module.exports = router;

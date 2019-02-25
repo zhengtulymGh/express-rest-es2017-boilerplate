@@ -14,6 +14,63 @@ const { scoreSchema } = require('./score.model');
 const roles = ['user', 'admin'];
 
 /**
+* User Levels
+*/
+const levels = {
+  names: [
+    { name: 'VIP会员', scoreRequired: 0, key: 1},
+    { name: '白银会员', scoreRequired: 10000, key: 2},
+    { name: '黄金会员', scoreRequired: 100000, key: 3},
+    { name: '钻石会员', scoreRequired: 500000, key: 4}
+  ],
+  scoreRequired: [0, 10000, 100000, 500000]
+};
+
+/**
+* User Professions
+*/
+const genders = [
+  {
+    name: '男',
+    key: 'male'
+  }, {
+    name: '女',
+    key: 'female'
+  }
+];
+
+/**
+* User Professions
+*/
+const professions = [
+  {
+    name: '学生',
+    key: 1
+  }, {
+    name: '全职主妇',
+    key: 2
+  }, {
+    name: '白领',
+    key: 3
+  }, {
+    name: '医生',
+    key: 4
+  }, {
+    name: '私营业主',
+    key: 5
+  }, {
+    name: '文艺工作者',
+    key: 6
+  }, {
+    name: '自由职业者',
+    key: 7
+  }, {
+    name: '其他',
+    key: 8
+  }
+];
+
+/**
  * User Schema
  * @private
  */
@@ -27,30 +84,41 @@ const userSchema = new mongoose.Schema({
   avatar: {
     type: String,
     trim: true,
+    default: ''
   },
   nickName: {
     type: String,
     maxlength: 128,
     index: true,
     trim: true,
+    default: ''
   },
   gender: {
-    type: String,
+    type: Object,
     index: true,
-    enum: ['male', 'female'],
+    enum: genders,
     trim: true,
+    default: null
   },
   birthday: {
     type: String,
     index: true,
     trim: true,
+    default: ''
   },
   deliveryAddress: [],
   profession: {
-    type: String,
+    type: Object,
     index: true,
+    enum: professions,
+    default: null
   },
   score: [scoreSchema],
+  level: {
+    type: Object,
+    enum: levels.names,
+    default: levels.names[0],
+  },
   email: {
     type: String,
     match: /^\S+@\S+\.\S+$/,
@@ -68,11 +136,12 @@ const userSchema = new mongoose.Schema({
     maxlength: 128,
     index: true,
     trim: true,
+    default: ''
   },
-  services: {
-    facebook: String,
-    google: String,
-  },
+  // services: {
+  //   facebook: String,
+  //   google: String,
+  // },
   role: {
     type: String,
     enum: roles,
@@ -97,11 +166,25 @@ userSchema.pre('save', async function save(next) {
 
     // const hash = await bcrypt.hash(this.password, rounds);
     // this.password = hash;
+    console.log('this.totalScore', this.totalScore)
+    levels.names.forEach(item => {
+      if (this.totalScore >= item.scoreRequired) {
+        this.level = item
+      }
+    })
 
     return next();
   } catch (error) {
     return next(error);
   }
+});
+
+userSchema.virtual('totalScore').get(function () {
+  let score = 0;
+  this.score.forEach(item => {
+    score += item.value
+  })
+  return score;
 });
 
 /**
@@ -110,7 +193,7 @@ userSchema.pre('save', async function save(next) {
 userSchema.method({
   transform() {
     const transformed = {};
-    const fields = ['id', 'name', 'nickName', 'phone', 'avatar', 'gender', 'birthday', 'profession', 'deliveryAddress', 'createdAt'];
+    const fields = ['id', 'name', 'nickName', 'phone', 'avatar', 'gender', 'birthday', 'profession', 'deliveryAddress', 'score', 'totalScore', 'level', 'createdAt'];
 
     fields.forEach((field) => {
       transformed[field] = this[field];
@@ -150,6 +233,7 @@ userSchema.method({
 userSchema.statics = {
 
   roles,
+  professions,
 
   /**
    * Get user
@@ -240,7 +324,7 @@ userSchema.statics = {
       errors: [{
         field: 'captcha',
         location: 'body',
-        messages: ['"captcha" is not correct'],
+        messages: ['验证码错误'],
       }],
       status: httpStatus.BAD_REQUEST,
       isPublic: true,
@@ -262,7 +346,7 @@ userSchema.statics = {
         errors: [{
           field: 'phone',
           location: 'body',
-          messages: ['"phone" already exists'],
+          messages: ['手机号已存在'],
         }],
         status: httpStatus.CONFLICT,
         isPublic: true,
